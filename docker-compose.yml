@@ -1,0 +1,9 @@
+version: "2"
+services:
+  users:
+    build: .
+    command: python user.py
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app

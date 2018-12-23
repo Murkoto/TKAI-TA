@@ -1,13 +1,14 @@
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
 from user import app, db
+import sqlite3 as sql
 
-
-migrate = Migrate(app, db)
-manager = Manager(app)
-
-manager.add_command('db', MigrateCommand)
-
+def migrate():
+    conn = sql.connect('database.db')
+    conn.execute('CREATE TABLE IF NOT EXISTS users (' +
+                    'id INTEGER PRIMARY KEY,' +
+                    'name varchar NOT NULL)')
 
 if __name__ == '__main__':
-    manager.run()
+    # manager.run()
+    migrate()
