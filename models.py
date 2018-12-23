@@ -34,14 +34,23 @@ class Users(BaseModel, db.Model):
 
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(80), nullable=False)
-    addresses = db.relationship('Address', backref='person', lazy=True)
+    phone = db.Column(db.String(20), nullable=True)
+    addresses = db.relationship('Address', backref='person', lazy=True, uselist=False)
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
     def to_json(self):
         return {
             "id": int(self.id),
-            "name": self.name
+            "name": self.name,
+            "phone": self.phone
         }
 class Address(BaseModel, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    users_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), unique=True)
+    address = db.Column(db.String(200), nullable=False)
+    def to_json(self):
+        return {
+            "id": int(self.id),
+            "user_id": int(self.user_id),
+            "address": self.address
+        }
