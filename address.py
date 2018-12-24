@@ -33,7 +33,7 @@ def add_address():
     newaddress = request.form.get('address')
 
     if not newaddress:
-        return {'status': 'ok'}
+        return jsonify({'status': 'ok'})
     try:
         newRec = Address(user_id=userid, address=newaddress)
         db.session.add(newRec)

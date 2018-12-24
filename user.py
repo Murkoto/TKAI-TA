@@ -54,10 +54,10 @@ def add_user():
     address = request.args.get('address', type=str)
 
     if not newname or not address:
-        return{
+        return jsonify({
             'status': 'error',
             'msg': 'Name and Address parameter is needed'
-        }
+        })
     newRec = Users(name=newname, phone=newphone)
     db.session.add(newRec)
     db.session.commit()
