@@ -1,4 +1,4 @@
-from flask import Flask, Response, jsonify
+from flask import Flask, Response, jsonify, request
 from models import db, Users
 import json
 import requests
@@ -37,12 +37,87 @@ def user_list():
     return jsonify(jsonRec)
 
 def get_user_address(userid):
-    r = requests.get('http://'+host_ip + ':5200/address/'+str(userid))
-    if r.status_code == requests.codes.ok:
-        print(r.text)
-        return r.text
-    else:
+    try:
+        r = requests.get('http://'+host_ip + ':5200/address/'+str(userid))
+        if r.status_code == requests.codes.ok:
+            print(r.text)
+            return r.text
+        else:
+            return "Address service is not available"
+    except requests.ConnectionError as e:
+        print # -*- coding: utf-8 -*-
         return "Address service is not available"
 
+@app.route("/users/add")
+def add_user():
+    newname = request.args.get('name', type=str)
+    newphone = request.args.get('phone', default=None, type=str)
+    address = request.args.get('address', default=None, type=str)
+
+    if not newname:
+        return{
+            'status': 'error',
+            'msg': 'Name parameter is needed'
+        }
+    newRec = Users(name=newname, phone=newphone)
+    db.session.add(newRec)
+    db.session.commit()
+
+    try:
+        r = requests.post('http://'+host_ip + ':5200/address/add', data={'userid' : newRec.id, 'address' : address})
+        if r.status_code == requests.codes.ok:
+            if r.json()['status'] == 'ok':
+                return jsonify({'status': 'ok', 'msg': 'Successfully added'})
+            else:
+                db.session.delete(newRec)
+                db.session.commit()
+                return jsonify({'status': 'error', 'msg': r.json()['msg']})
+        else:
+            db.session.delete(newRec)
+            db.session.commit()
+            return jsonify({'status': 'error', 'msg': r.json()['msg']})
+    except requests.ConnectionError as e:
+        db.session.delete(newRec)
+        db.session.commit()
+        print e # -*- coding: utf-8 -*-
+        return jsonify({'status': 'error', 'msg': "Address service is not available"})
+
+@app.route('/users/delete/<user_id>')
+def delete_user(user_id):
+    userid = user_id
+    userRec = db.session.query(Users).filter_by(id=userid).first()
+    if not userRec:
+        return jsonify({'status': 'ok', 'msg': "Data doesn't exist"})
+    db.session.delete(userRec)
+    db.session.commit()
+    return jsonify({'status': 'ok', 'msg': 'Successfully deleted'})
+
+@app.route('/users/update/<user_id>')
+def update_user(user_id):
+    userid = user_id
+    newname = request.args.get('name', type=str, default=None)
+    newphone = request.args.get('phone', default=None, type=str)
+    address = request.args.get('address', default=None, type=str)
+    if address:
+        try:
+            r = requests.post('http://'+host_ip + ':5200/address/update', data={'userid' : userid, 'address' : address})
+            if r.status_code != requests.codes.ok or r.json()['status'] != 'ok':
+                return jsonify({'status': 'error', 'msg': r.json()['msg']})
+        except requests.ConnectionError as e:
+            print e # -*- coding: utf-8 -*-
+            return jsonify({'status': 'error', 'msg': "Address service is not available"})
+
+    userRec = db.session.query(Users).filter_by(id=userid).first()
+    if newname:
+        userRec.name = newname
+    if newphone:
+        userRec.phone = newphone
+    try:
+        db.session.commit()
+        return jsonify({'status': 'ok', 'msg': 'Sucessfully updated'})
+    except Exception as e:
+        print e  # -*- coding: utf-8 -*-
+        return jsonify({'status': 'error', 'msg': e.detail})
+
 if __name__ == '__main__':
-    app.run(port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
