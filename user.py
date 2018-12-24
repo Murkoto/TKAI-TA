@@ -1,15 +1,14 @@
 from flask import Flask, Response, jsonify, request
 from models import db, Users
-import json
 import requests
 import socket
 
 app = Flask(__name__)
 POSTGRES = {
     'user': 'postgres',
-    'pw': 'password',
+    'pw': '123',
     'db': 'tkai',
-    'host': 'localhost',
+    'host': 'PostgreSQL',
     'port': '5432',
 }
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://%(user)s:\
@@ -38,7 +37,7 @@ def user_list():
 
 def get_user_address(userid):
     try:
-        r = requests.get('http://'+host_ip + ':5200/address/'+str(userid))
+        r = requests.get('http://address'+ ':5200/address/'+str(userid))
         if r.status_code == requests.codes.ok:
             print(r.text)
             return r.text
@@ -54,17 +53,17 @@ def add_user():
     newphone = request.args.get('phone', default=None, type=str)
     address = request.args.get('address', default=None, type=str)
 
-    if not newname:
+    if not newname or not address:
         return{
             'status': 'error',
-            'msg': 'Name parameter is needed'
+            'msg': 'Name and Address parameter is needed'
         }
     newRec = Users(name=newname, phone=newphone)
     db.session.add(newRec)
     db.session.commit()
 
     try:
-        r = requests.post('http://'+host_ip + ':5200/address/add', data={'userid' : newRec.id, 'address' : address})
+        r = requests.post('http://address'+ ':5200/address/add', data={'userid' : newRec.id, 'address' : address})
         if r.status_code == requests.codes.ok:
             if r.json()['status'] == 'ok':
                 return jsonify({'status': 'ok', 'msg': 'Successfully added'})
@@ -100,7 +99,7 @@ def update_user(user_id):
     address = request.args.get('address', default=None, type=str)
     if address:
         try:
-            r = requests.post('http://'+host_ip + ':5200/address/update', data={'userid' : userid, 'address' : address})
+            r = requests.post('http://address'+ ':5200/address/update', data={'userid' : userid, 'address' : address})
             if r.status_code != requests.codes.ok or r.json()['status'] != 'ok':
                 return jsonify({'status': 'error', 'msg': r.json()['msg']})
         except requests.ConnectionError as e:

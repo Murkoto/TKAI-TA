@@ -1,0 +1,40 @@
+version: "3"
+services:
+  PostgreSQL:
+    restart: always
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - DEBUG=true
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123
+      - POSTGRES_DB=tkai
+    volumes:
+      - /srv/docker/postgresql:/var/lib/postgresql
+
+  user:
+    build:
+      context: .
+      dockerfile: UserDockerfile
+    command: >
+      /bin/bash -c "python manage.py db init; python manage.py db migrate; python manage.py db upgrade; python user.py"
+    ports:
+      - 5000:5000
+    volumes:
+      - .:/usercode
+    links:
+      - PostgreSQL
+
+  address:
+    build:
+      context: .
+      dockerfile: AddressDockerfile
+    command: >
+      bash -c "python address.py"
+    ports:
+      - 5200:5200
+    volumes:
+      - .:/addresscode
+    links:
+      - PostgreSQL

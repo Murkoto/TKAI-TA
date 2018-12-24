@@ -1,15 +1,13 @@
 from flask import Flask, Response, jsonify, request
 from models import db, Address
-import json
-import requests
 import socket
 
 app = Flask(__name__)
 POSTGRES = {
     'user': 'postgres',
-    'pw': 'password',
+    'pw': '123',
     'db': 'tkai',
-    'host': 'localhost',
+    'host': 'PostgreSQL',
     'port': '5432',
 }
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://%(user)s:\
@@ -59,4 +57,4 @@ def update_address():
         return jsonify({'status': 'error', 'msg': e.detail})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',port=5200, debug=True)
+    app.run(host='0.0.0.0', port=5200, debug=True)
