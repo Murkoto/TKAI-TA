@@ -51,7 +51,7 @@ def get_user_address(userid):
 def add_user():
     newname = request.args.get('name', type=str)
     newphone = request.args.get('phone', default=None, type=str)
-    address = request.args.get('address', default=None, type=str)
+    address = request.args.get('address', type=str)
 
     if not newname or not address:
         return{
