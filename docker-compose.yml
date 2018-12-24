@@ -30,8 +30,7 @@ services:
     build:
       context: .
       dockerfile: AddressDockerfile
-    command: >
-      bash -c "python address.py"
+    command: python address.py
     ports:
       - 5200:5200
     volumes:
